@@ -1,0 +1,424 @@
+{
+  "schema_version": 1,
+  "title": "Consultations",
+  "description": "Clinician consultation tracking with payment and fee analysis",
+
+  "data_sources": {
+    "consultations": {
+      "source": "duckdb",
+      "sql_ref": "detail.sql",
+      "table_name": "consultations",
+      "filters": [
+        "@date_range:consultation_status_finalized_at",
+        "@consultation_type:consultation_type",
+        "@clinician:clinician_name",
+        "@website:website_name",
+        "@treatment_type:treatment_type_name"
+      ],
+      "text_filters": [
+        "@consultation_id:consultation_id",
+        "@state:pharmacy_state",
+        "@medication:prescription_medications",
+        "@pharmacy:pharmacy_name"
+      ],
+      "pagination": { "default_page_size": 50, "server_side": true },
+      "cache_ttl_seconds": 300
+    },
+    "by_website": {
+      "source": "duckdb",
+      "sql_ref": "by_website.sql",
+      "table_name": "rpt_clinician_consultation_website_and_payments",
+      "filters": ["@month:year_month"],
+      "cache_ttl_seconds": 600
+    },
+    "fees": {
+      "source": "duckdb",
+      "sql_ref": "fees.sql",
+      "table_name": "rpt_clinician_consultation_website_and_payments",
+      "filters": ["@month:year_month"],
+      "cache_ttl_seconds": 600
+    },
+    "payments": {
+      "source": "duckdb",
+      "sql_ref": "payments.sql",
+      "table_name": "rpt_clinician_consultation_website_and_payments",
+      "filters": ["@month:year_month"],
+      "cache_ttl_seconds": 600
+    },
+    "orders": {
+      "source": "duckdb",
+      "sql_ref": "orders.sql",
+      "table_name": "orders",
+      "filters": ["@month:year_month"],
+      "cache_ttl_seconds": 600
+    },
+    "wmg_summary": {
+      "source": "computed",
+      "function": "wmg_intercompany",
+      "inputs": ["consultations", "orders"],
+      "output": "summary_table",
+      "params": {
+        "tech_fee": 137500,
+        "doxypep_fpk_rate": 49,
+        "std_hl_fpk_rate": 95,
+        "wmg_consultation_rate": 64,
+        "req_fpk_rate": 2,
+        "req_wmg_rate": 1.5,
+        "walkin_rate": 5,
+        "mgmt_fee_pct": 0.50
+      }
+    },
+    "wmg_mgmt_fee": {
+      "source": "computed",
+      "function": "wmg_intercompany",
+      "inputs": ["consultations", "orders"],
+      "output": "mgmt_fee",
+      "params": {
+        "tech_fee": 137500,
+        "doxypep_fpk_rate": 49,
+        "std_hl_fpk_rate": 95,
+        "wmg_consultation_rate": 64,
+        "req_fpk_rate": 2,
+        "req_wmg_rate": 1.5,
+        "walkin_rate": 5,
+        "mgmt_fee_pct": 0.50
+      }
+    },
+    "wmg_je": {
+      "source": "computed",
+      "function": "wmg_intercompany",
+      "inputs": ["consultations", "orders"],
+      "output": "wmg_je",
+      "params": {
+        "tech_fee": 137500,
+        "doxypep_fpk_rate": 49,
+        "std_hl_fpk_rate": 95,
+        "wmg_consultation_rate": 64,
+        "req_fpk_rate": 2,
+        "req_wmg_rate": 1.5,
+        "walkin_rate": 5,
+        "mgmt_fee_pct": 0.50
+      }
+    },
+    "fpk_je": {
+      "source": "computed",
+      "function": "wmg_intercompany",
+      "inputs": ["consultations", "orders"],
+      "output": "fpk_je",
+      "params": {
+        "tech_fee": 137500,
+        "doxypep_fpk_rate": 49,
+        "std_hl_fpk_rate": 95,
+        "wmg_consultation_rate": 64,
+        "req_fpk_rate": 2,
+        "req_wmg_rate": 1.5,
+        "walkin_rate": 5,
+        "mgmt_fee_pct": 0.50
+      }
+    }
+  },
+
+  "filters": {
+    "date_range": {
+      "type": "date_range",
+      "label": "Date Range",
+      "default": { "start": "current_month_start", "end": "today" }
+    },
+    "consultation_type": {
+      "type": "multiselect",
+      "label": "Consultation Type",
+      "options_from": { "data_source": "consultations", "column": "consultation_type" }
+    },
+    "clinician": {
+      "type": "multiselect",
+      "label": "Clinician",
+      "options_from": { "data_source": "consultations", "column": "clinician_name" }
+    },
+    "website": {
+      "type": "multiselect",
+      "label": "Website",
+      "options_from": { "data_source": "consultations", "column": "website_name" }
+    },
+    "treatment_type": {
+      "type": "multiselect",
+      "label": "Treatment Type",
+      "options_from": { "data_source": "consultations", "column": "treatment_type_name" }
+    },
+    "state": {
+      "type": "text",
+      "label": "State",
+      "match": "contains"
+    },
+    "consultation_id": {
+      "type": "text",
+      "label": "Consultation ID",
+      "match": "exact"
+    },
+    "medication": {
+      "type": "text",
+      "label": "Medication",
+      "match": "contains"
+    },
+    "pharmacy": {
+      "type": "text",
+      "label": "Pharmacy",
+      "match": "contains"
+    },
+    "month": {
+      "type": "multiselect",
+      "label": "Month",
+      "default": ["current_month_start"],
+      "options_from": { "data_source": "by_website", "column": "year_month" }
+    }
+  },
+
+  "computed": {
+    "total_payment": {
+      "source": "by_website",
+      "agg": "sum",
+      "column": "total_payment"
+    },
+    "total_required_fee": {
+      "source": "by_website",
+      "agg": "sum",
+      "column": "required_fee"
+    },
+    "total_consultations": {
+      "source": "by_website",
+      "agg": "sum",
+      "column": "total_consultations"
+    }
+  },
+
+  "pages": [
+    {
+      "id": "consultations",
+      "label": "Consultations",
+      "layout": [
+        {
+          "type": "section",
+          "title": "Consultations",
+          "children": [
+            {
+              "type": "row",
+              "children": [
+                { "type": "big_value", "title": "Total Payments", "value": "$computed.total_payment", "format": "currency", "display": "full", "decimals": 0 },
+                { "type": "big_value", "title": "Total Req Fee", "value": "$computed.total_required_fee", "format": "currency", "display": "full", "decimals": 0 },
+                { "type": "big_value", "title": "Total Consultations", "value": "$computed.total_consultations", "format": "number", "display": "full", "decimals": 0 }
+              ]
+            },
+            {
+              "type": "row",
+              "children": [
+                {
+                  "type": "table",
+                  "title": "Consultation Detail",
+                  "data_source": "consultations",
+                  "columns": [
+                    { "key": "consultation_id", "label": "Consultation ID", "width": 118 },
+                    { "key": "consultation_status_finalized_at", "label": "Date and Time", "format": "datetime", "width": 160 },
+                    { "key": "transaction_id", "label": "Order ID", "width": 100 },
+                    { "key": "consultation_type", "label": "Type", "width": 80 },
+                    { "key": "website_name", "label": "Website", "width": 110 },
+                    { "key": "pharmacy_state", "label": "State", "width": 60 },
+                    { "key": "clinician_name", "label": "Clinician", "width": 120 },
+                    { "key": "treatment_type_name", "label": "Treatment Type", "width": 140 },
+                    { "key": "prescription_medications", "label": "Medication", "width": 160 },
+                    { "key": "pharmacy_name", "label": "Pharmacy", "width": 140 }
+                  ],
+                  "default_sort": { "column": "consultation_status_finalized_at", "direction": "desc" },
+                  "pagination": { "default_page_size": 50, "server_side": true },
+                  "width": 12
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "consultations_data",
+      "label": "Consultations Data",
+      "layout": [
+        {
+          "type": "section",
+          "title": "Consultations Data",
+          "children": [
+            {
+              "type": "row",
+              "children": [
+                { "type": "big_value", "title": "Total Payments", "value": "$computed.total_payment", "format": "currency", "display": "full", "decimals": 0 },
+                { "type": "big_value", "title": "Total Req Fee", "value": "$computed.total_required_fee", "format": "currency", "display": "full", "decimals": 0 },
+                { "type": "big_value", "title": "Total Consultations", "value": "$computed.total_consultations", "format": "number", "display": "full", "decimals": 0 }
+              ]
+            },
+            {
+              "type": "row",
+              "children": [
+                {
+                  "type": "table",
+                  "title": "By Website",
+                  "data_source": "by_website",
+                  "columns": [
+                    { "key": "clinician_name", "label": "Clinician", "width": 120 },
+                    { "key": "year_month", "label": "Year-Month", "width": 90 },
+                    { "key": "stdcheck_async", "label": "STDcheck Async", "width": 100 },
+                    { "key": "stdcheck_scheduled", "label": "STDcheck Scheduled", "width": 110 },
+                    { "key": "healthlabs_async", "label": "HealthLabs Async", "width": 100 },
+                    { "key": "healthlabs_scheduled", "label": "HealthLabs Scheduled", "width": 115 },
+                    { "key": "treatmyuti_async", "label": "TreatMyUTI Async", "width": 100 },
+                    { "key": "treatmyuti_scheduled", "label": "TreatMyUTI Scheduled", "width": 115 },
+                    { "key": "starfish_async", "label": "Starfish Async", "width": 100 },
+                    { "key": "starfish_scheduled", "label": "Starfish Scheduled", "width": 110 }
+                  ],
+                  "default_sort": { "column": "year_month", "direction": "desc" },
+                  "aggregations": {
+                    "stdcheck_async": "sum",
+                    "stdcheck_scheduled": "sum",
+                    "healthlabs_async": "sum",
+                    "healthlabs_scheduled": "sum",
+                    "treatmyuti_async": "sum",
+                    "treatmyuti_scheduled": "sum",
+                    "starfish_async": "sum",
+                    "starfish_scheduled": "sum"
+                  },
+                  "width": 12
+                }
+              ]
+            },
+            {
+              "type": "row",
+              "children": [
+                {
+                  "type": "table",
+                  "title": "Clinician Fees",
+                  "data_source": "fees",
+                  "columns": [
+                    { "key": "clinician_name", "label": "Clinician", "width": 160 },
+                    { "key": "year_month", "label": "Year-Month", "width": 100 },
+                    { "key": "required_fee", "label": "Req Fee", "format": "currency", "width": 120 },
+                    { "key": "avg_async_consultation_fee", "label": "Avg Async Fee", "format": "currency", "width": 130 },
+                    { "key": "avg_scheduled_consultation_fee", "label": "Avg Scheduled Fee", "format": "currency", "width": 140 }
+                  ],
+                  "default_sort": { "column": "required_fee", "direction": "desc" },
+                  "width": 12
+                }
+              ]
+            },
+            {
+              "type": "row",
+              "children": [
+                {
+                  "type": "table",
+                  "title": "Total Payments",
+                  "data_source": "payments",
+                  "columns": [
+                    { "key": "clinician_name", "label": "Clinician", "width": 120 },
+                    { "key": "year_month", "label": "Year-Month", "width": 90 },
+                    { "key": "total_payment", "label": "Total Payments", "format": "currency", "width": 120 },
+                    { "key": "required_fee", "label": "Req Fee", "format": "currency", "width": 100 },
+                    { "key": "async_count", "label": "Async Count", "width": 90 },
+                    { "key": "total_async_fee", "label": "Total Async Fee", "format": "currency", "width": 120 },
+                    { "key": "scheduled_count", "label": "Scheduled Count", "width": 110 },
+                    { "key": "total_scheduled_fee", "label": "Total Scheduled Fee", "format": "currency", "width": 130 }
+                  ],
+                  "default_sort": { "column": "total_payment", "direction": "desc" },
+                  "aggregations": {
+                    "total_payment": "sum",
+                    "required_fee": "sum",
+                    "async_count": "sum",
+                    "total_async_fee": "sum",
+                    "scheduled_count": "sum",
+                    "total_scheduled_fee": "sum"
+                  },
+                  "width": 12
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+    ,
+    {
+      "id": "wmg_intercompany",
+      "label": "WMG Intercompany",
+      "layout": [
+        {
+          "type": "section",
+          "title": "WMG Intercompany",
+          "children": [
+            {
+              "type": "row",
+              "children": [
+                { "type": "big_value", "title": "Net Payment", "value": "$computed_source.wmg_summary._metrics.net_payment", "format": "currency", "display": "full", "decimals": 0 },
+                { "type": "big_value", "title": "Gross Receipts", "value": "$computed_source.wmg_summary._metrics.gross_receipts", "format": "currency", "display": "full", "decimals": 0 },
+                { "type": "big_value", "title": "Mgmt Fees", "value": "$computed_source.wmg_summary._metrics.mgmt_fees", "format": "currency", "display": "full", "decimals": 0 },
+                { "type": "big_value", "title": "Tech Fee", "value": "$computed_source.wmg_summary._metrics.tech_fee", "format": "currency", "display": "full", "decimals": 0 }
+              ]
+            },
+            {
+              "type": "row",
+              "children": [
+                {
+                  "type": "table",
+                  "title": "Summary",
+                  "data_source": "wmg_summary",
+                  "columns": "auto",
+                  "column_format": { "reqs": "currency", "doxypep": "currency", "std_hl": "currency", "tmu": "currency", "sf": "currency", "walkin": "currency", "total": "currency" },
+                  "width": 12
+                }
+              ]
+            },
+            {
+              "type": "row",
+              "children": [
+                {
+                  "type": "table",
+                  "title": "Management Fee Breakdown",
+                  "data_source": "wmg_mgmt_fee",
+                  "columns": [
+                    { "key": "line_item", "label": "Line Item", "width": 250 },
+                    { "key": "amount", "label": "Amount", "format": "currency", "width": 150 }
+                  ],
+                  "width": 6
+                }
+              ]
+            },
+            {
+              "type": "row",
+              "children": [
+                {
+                  "type": "table",
+                  "title": "WMG Journal Entry",
+                  "data_source": "wmg_je",
+                  "columns": [
+                    { "key": "account", "label": "Account", "width": 120 },
+                    { "key": "description", "label": "Description", "width": 200 },
+                    { "key": "debit", "label": "Debit", "format": "currency", "width": 120 },
+                    { "key": "credit", "label": "Credit", "format": "currency", "width": 120 }
+                  ],
+                  "width": 6
+                },
+                {
+                  "type": "table",
+                  "title": "FPK Journal Entry",
+                  "data_source": "fpk_je",
+                  "columns": [
+                    { "key": "account", "label": "Account", "width": 120 },
+                    { "key": "description", "label": "Description", "width": 200 },
+                    { "key": "debit", "label": "Debit", "format": "currency", "width": 120 },
+                    { "key": "credit", "label": "Credit", "format": "currency", "width": 120 }
+                  ],
+                  "width": 6
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+
+  "layout": []
+}

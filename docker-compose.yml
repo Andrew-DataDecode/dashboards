@@ -1,0 +1,15 @@
+services:
+  tanit:
+    build:
+      context: .
+      args:
+        VITE_CLERK_PUBLISHABLE_KEY: ${VITE_CLERK_PUBLISHABLE_KEY}
+    ports:
+      - "${HOST_PORT:-8001}:8001"
+    env_file:
+      - .env.local
+    volumes:
+      - ./content:/app/content:ro
+      - ${DUCKDB_CREDENTIALS_PATH:-./secrets/gcs-credentials.json}:/app/secrets/gcs-credentials.json:ro
+      - ./logs:/app/logs
+      - ./data:/app/data

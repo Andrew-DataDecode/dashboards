@@ -1,0 +1,60 @@
+/* ReactFlow internal element styling for MetricTree */
+
+/* Controls */
+.metric-tree .react-flow__controls {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+.metric-tree .react-flow__controls-button {
+  background-color: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  color: #1f2937;
+}
+
+.metric-tree .react-flow__controls-button:hover {
+  background-color: #f9fafb;
+}
+
+/* Edge styling */
+.metric-tree .react-flow__edge-path {
+  stroke: #e5e7eb;
+  stroke-width: 2;
+}
+
+.metric-tree .react-flow__edge-text {
+  font-size: 16px;
+  font-weight: bold;
+  fill: #6b7280;
+}
+
+/* MiniMap */
+.metric-tree .react-flow__minimap {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.metric-tree .react-flow__minimap-mask {
+  fill: #3b82f6;
+  fill-opacity: 0.15;
+  stroke: #3b82f6;
+  stroke-width: 2;
+}
+
+.metric-tree .react-flow__minimap-node {
+  fill: #6b7280;
+  stroke: none;
+}
+
+/* Node focus */
+.metric-tree .react-flow__node:focus {
+  outline: none;
+}
+
+.metric-tree .react-flow__node:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 4px;
+  border-radius: 8px;
+}

@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "title": "Test Dashboard",
+  "description": "A valid test dashboard config",
+  "data_sources": {
+    "consultations": {
+      "source": "duckdb",
+      "sql_ref": "detail.sql",
+      "table_name": "consultations",
+      "filters": ["@date_range:consultation_status_finalized_at"],
+      "text_filters": ["@search:consultation_id"],
+      "pagination": { "default_page_size": 50, "server_side": true },
+      "cache_ttl_seconds": 300
+    }
+  },
+  "filters": {
+    "date_range": {
+      "type": "date_range",
+      "label": "Date Range",
+      "default": { "start": "2025-01-01", "end": "today" }
+    },
+    "search": {
+      "type": "text",
+      "label": "Search",
+      "match": "exact"
+    }
+  },
+  "computed": {
+    "total_count": {
+      "source": "consultations",
+      "agg": "count",
+      "column": "consultation_id"
+    }
+  },
+  "layout": [
+    {
+      "type": "section",
+      "title": "Overview",
+      "children": [
+        {
+          "type": "row",
+          "children": [
+            {
+              "type": "big_value",
+              "title": "Total",
+              "value": "$computed.total_count",
+              "format": "number"
+            }
+          ]
+        },
+        {
+          "type": "row",
+          "children": [
+            {
+              "type": "table",
+              "title": "Detail",
+              "data_source": "consultations",
+              "columns": [
+                { "key": "consultation_id", "label": "ID" },
+                { "key": "consultation_status_finalized_at", "label": "Date", "format": "datetime" }
+              ],
+              "default_sort": { "column": "consultation_status_finalized_at", "direction": "desc" }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "title": "Circular Deps",
+  "description": "Filters have circular depends_on",
+  "data_sources": {
+    "main": {
+      "source": "duckdb",
+      "sql_ref": "detail.sql",
+      "table_name": "main_table",
+      "filters": [],
+      "cache_ttl_seconds": 300
+    }
+  },
+  "filters": {
+    "filter_a": {
+      "type": "text",
+      "label": "A",
+      "match": "exact",
+      "depends_on": ["filter_b"]
+    },
+    "filter_b": {
+      "type": "text",
+      "label": "B",
+      "match": "exact",
+      "depends_on": ["filter_c"]
+    },
+    "filter_c": {
+      "type": "text",
+      "label": "C",
+      "match": "exact",
+      "depends_on": ["filter_a"]
+    }
+  },
+  "computed": {},
+  "layout": []
+}

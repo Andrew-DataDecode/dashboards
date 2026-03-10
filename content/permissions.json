@@ -1,0 +1,39 @@
+{
+  "groups": {
+    "admin": ["*"],
+    "analytics": ["consultations", "data-dumps", "example"],
+    "clinical": ["consultations"],
+    "executive": ["*"]
+  },
+  "users": {
+    "admin@example.com": {
+      "groups": ["admin"],
+      "extra_dashboards": []
+    },
+    "user@example.com": {
+      "groups": ["executive"],
+      "extra_dashboards": []
+    },
+    "clinician@example.com": {
+      "groups": ["clinical"],
+      "extra_dashboards": []
+    }
+  },
+  "dashboards": {
+    "consultations": {
+      "title": "Consultations",
+      "description": "Evidence consultation analytics dashboard",
+      "path": "/dashboards/consultations"
+    },
+    "data-dumps": {
+      "title": "Data Dumps",
+      "description": "Order-level data export with payment detail and cost analysis",
+      "path": "/dashboards/data-dumps"
+    },
+    "example": {
+      "title": "Example",
+      "description": "Example Evidence dashboard",
+      "path": "/dashboards/example"
+    }
+  }
+}

@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "title": "Payment Audit",
+  "description": "Payment discrepancy audit identifying unpaid, underpaid, and overpaid orders by brand",
+
+  "data_sources": {
+    "summary": {
+      "source": "duckdb",
+      "sql_ref": "summary.sql",
+      "table_name": "rpt_payment_audit_summary",
+      "filters": ["@brand:brand_name", "@audit_category:audit_category"],
+      "cache_ttl_seconds": 300
+    },
+    "detail": {
+      "source": "duckdb",
+      "sql_ref": "detail.sql",
+      "table_name": "rpt_payment_audit",
+      "filters": ["@brand:brand_name", "@audit_category:audit_category"],
+      "text_filters": ["@order_id:order_id"],
+      "pagination": { "default_page_size": 50, "server_side": true },
+      "cache_ttl_seconds": 300
+    }
+  },
+
+  "filters": {
+    "brand": {
+      "type": "multiselect",
+      "label": "Brand",
+      "options_from": { "data_source": "detail", "column": "brand_name" }
+    },
+    "audit_category": {
+      "type": "multiselect",
+      "label": "Audit Category",
+      "options_from": { "data_source": "detail", "column": "audit_category" }
+    },
+    "order_id": {
+      "type": "text",
+      "label": "Order ID",
+      "match": "exact"
+    }
+  },
+
+  "computed": {
+    "total_orders": {
+      "source": "summary",
+      "agg": "sum",
+      "column": "order_count"
+    },
+    "total_discrepancy": {
+      "source": "summary",
+      "agg": "sum",
+      "column": "total_discrepancy"
+    },
+    "unpaid_orders": {
+      "source": "summary",
+      "expr": "SUM(CASE WHEN audit_category = 'unpaid' THEN order_count ELSE 0 END)"
+    }
+  },
+
+  "layout": [
+    {
+      "type": "section",
+      "title": "Payment Audit",
+      "children": [
+        {
+          "type": "row",
+          "children": [
+            { "type": "big_value", "title": "Total Flagged Orders", "value": "$computed.total_orders", "format": "number" },
+            { "type": "big_value", "title": "Total Discrepancy", "value": "$computed.total_discrepancy", "format": "currency" },
+            { "type": "big_value", "title": "Unpaid Orders", "value": "$computed.unpaid_orders", "format": "number" }
+          ]
+        },
+        {
+          "type": "row",
+          "children": [
+            {
+              "type": "chart",
+              "title": "Discrepancies by Brand and Category",
+              "data_source": "summary",
+              "chart_type": "bar",
+              "stacked": true,
+              "x": "brand_name",
+              "y": "order_count",
+              "series": "audit_category",
+              "width": 12
+            }
+          ]
+        },
+        {
+          "type": "row",
+          "children": [
+            {
+              "type": "table",
+              "title": "Order Detail",
+              "data_source": "detail",
+              "columns": [
+                { "key": "order_id", "label": "Order ID", "format": "number", "width": 90 },
+                { "key": "order_date", "label": "Order Date", "format": "date", "width": 100 },
+                { "key": "brand_name", "label": "Brand", "width": 120 },
+                { "key": "audit_category", "label": "Status", "width": 90 },
+                { "key": "ol_total", "label": "Order Total", "format": "currency", "width": 100 },
+                { "key": "net_payment_total", "label": "Net Paid", "format": "currency", "width": 100 },
+                { "key": "balance", "label": "Balance", "format": "currency", "width": 90 },
+                { "key": "days_since_order", "label": "Days", "format": "number", "width": 60 },
+                { "key": "order_line_names", "label": "Items", "width": 200 }
+              ],
+              "default_sort": { "column": "days_since_order", "direction": "desc" },
+              "pagination": { "default_page_size": 50, "server_side": true },
+              "width": 12
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

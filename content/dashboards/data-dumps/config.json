@@ -1,0 +1,379 @@
+{
+  "schema_version": 1,
+  "title": "Data Dumps",
+  "description": "Order-level data export with payment detail, cost analysis, and payment timing",
+
+  "data_sources": {
+    "detail": {
+      "source": "duckdb",
+      "sql_ref": "detail.sql",
+      "table_name": "rpt_data_dumps_with_payment_detail",
+      "filters": ["@website:website_name", "@date_range:date"],
+      "pagination": { "default_page_size": 50, "server_side": true },
+      "cache_ttl_seconds": 300
+    },
+    "line_items": {
+      "source": "duckdb",
+      "sql_ref": "line_items.sql",
+      "table_name": "rpt_data_dumps_with_payment_detail",
+      "filters": ["@website:website_name", "@date_range:date"],
+      "cache_ttl_seconds": 600
+    },
+    "totals_by_website": {
+      "source": "duckdb",
+      "sql_ref": "totals_by_website.sql",
+      "table_name": "rpt_data_dumps_with_payment_detail",
+      "filters": ["@website:website_name", "@date_range:date"],
+      "cache_ttl_seconds": 600
+    },
+    "final_results": {
+      "source": "duckdb",
+      "sql_ref": "final_results.sql",
+      "table_name": "rpt_data_dumps_with_payment_detail",
+      "filters": ["@website:website_name", "@date_range:date"],
+      "pagination": { "default_page_size": 50, "server_side": true },
+      "cache_ttl_seconds": 300
+    },
+    "cost_by_lab_network": {
+      "source": "duckdb",
+      "sql_ref": "cost_by_lab_network.sql",
+      "table_name": "rpt_data_dumps_with_payment_detail",
+      "filters": ["@website:website_name", "@date_range:date"],
+      "cache_ttl_seconds": 600
+    },
+    "by_result_date": {
+      "source": "duckdb",
+      "sql_ref": "by_result_date.sql",
+      "table_name": "rpt_data_dumps_with_payment_detail",
+      "filters": ["@website:website_name", "@date_range:date", "@result_date_range:result_date"],
+      "cache_ttl_seconds": 600
+    },
+    "data_dumps_full": {
+      "source": "duckdb",
+      "sql_ref": "data_dumps_full.sql",
+      "table_name": "rpt_data_dumps_with_payment_detail",
+      "filters": ["@website:website_name", "@date_range:date"],
+      "cache_ttl_seconds": 600
+    },
+    "payments_waterfall": {
+      "source": "computed",
+      "function": "payment_timing_waterfall",
+      "inputs": ["data_dumps_full"],
+      "output": "payments_waterfall",
+      "params": { "max_months": 24 }
+    },
+    "refunds_waterfall": {
+      "source": "computed",
+      "function": "payment_timing_waterfall",
+      "inputs": ["data_dumps_full"],
+      "output": "refunds_waterfall",
+      "params": { "max_months": 24 }
+    },
+    "order_month_by_brand": {
+      "source": "computed",
+      "function": "payment_timing_waterfall",
+      "inputs": ["data_dumps_full"],
+      "output": "order_month_by_brand",
+      "params": { "max_months": 24 }
+    },
+    "payment_timing_summary": {
+      "source": "computed",
+      "function": "payment_timing_waterfall",
+      "inputs": ["data_dumps_full"],
+      "output": "payment_timing_summary",
+      "params": { "max_months": 24 }
+    }
+  },
+
+  "filters": {
+    "website": {
+      "type": "multiselect",
+      "label": "Website",
+      "default": ["STDcheck", "HealthLabs", "TreatMyUTI", "Starfish", "Anonymous", "Utitreatment", "PaternityLab", "PaternityLab Canada"],
+      "options_from": { "data_source": "detail", "column": "website_name" }
+    },
+    "date_range": {
+      "type": "date_range",
+      "label": "Order Date Range",
+      "default": { "start": "current_month_start", "end": "today" }
+    },
+    "result_date_range": {
+      "type": "date_range",
+      "label": "Result Date Range"
+    }
+  },
+
+  "computed": {
+    "total_payment": {
+      "source": "totals_by_website",
+      "agg": "sum",
+      "column": "total_payment"
+    },
+    "total_refund": {
+      "source": "totals_by_website",
+      "agg": "sum",
+      "column": "total_refund"
+    },
+    "number_of_orders": {
+      "source": "totals_by_website",
+      "agg": "sum",
+      "column": "order_count"
+    },
+    "current_revenue": {
+      "source": "totals_by_website",
+      "agg": "sum",
+      "column": "current_revenue"
+    },
+    "final_orders": {
+      "source": "cost_by_lab_network",
+      "agg": "sum",
+      "column": "order_count"
+    },
+    "final_revenue": {
+      "source": "cost_by_lab_network",
+      "agg": "sum",
+      "column": "revenue"
+    },
+    "final_cost": {
+      "source": "cost_by_lab_network",
+      "agg": "sum",
+      "column": "total_cost"
+    }
+  },
+
+  "pages": [
+    {
+      "id": "order_level",
+      "label": "Order Level Details",
+      "layout": [
+        {
+          "type": "section",
+          "title": "Order Level Details",
+          "children": [
+            {
+              "type": "row",
+              "children": [
+                { "type": "big_value", "title": "Total Payment", "value": "$computed.total_payment", "format": "currency", "display": "full", "decimals": 0 },
+                { "type": "big_value", "title": "Total Refund", "value": "$computed.total_refund", "format": "currency", "display": "full", "decimals": 0 },
+                { "type": "big_value", "title": "Number of Orders", "value": "$computed.number_of_orders", "format": "number", "display": "full", "decimals": 0 },
+                { "type": "big_value", "title": "Current Revenue", "value": "$computed.current_revenue", "format": "currency", "display": "full", "decimals": 0 }
+              ]
+            },
+            {
+              "type": "row",
+              "children": [
+                {
+                  "type": "table",
+                  "title": "Order Detail",
+                  "data_source": "detail",
+                  "columns": [
+                    { "key": "date", "label": "Date", "format": "date", "width": 100 },
+                    { "key": "order_id", "label": "Order ID", "width": 90 },
+                    { "key": "website_name", "label": "Website", "width": 110 },
+                    { "key": "order_status", "label": "Status", "width": 80 },
+                    { "key": "order_line_name", "label": "Item", "width": 160 },
+                    { "key": "order_line_price", "label": "Price", "format": "currency", "width": 80 },
+                    { "key": "total_payment", "label": "Payment", "format": "currency", "width": 90 },
+                    { "key": "total_refund_processed", "label": "Refund", "format": "currency", "width": 90 },
+                    { "key": "current_revenue", "label": "Revenue", "format": "currency", "width": 90 }
+                  ],
+                  "default_sort": { "column": "date", "direction": "desc" },
+                  "pagination": { "default_page_size": 50, "server_side": true },
+                  "width": 12
+                }
+              ]
+            },
+            {
+              "type": "row",
+              "children": [
+                {
+                  "type": "table",
+                  "title": "Line Items",
+                  "data_source": "line_items",
+                  "columns": [
+                    { "key": "order_line_name", "label": "Line Item", "width": 200 },
+                    { "key": "order_count", "label": "Orders", "format": "number", "width": 80 },
+                    { "key": "total_price", "label": "Total Price", "format": "currency", "width": 120 },
+                    { "key": "total_payment", "label": "Total Payment", "format": "currency", "width": 120 },
+                    { "key": "total_refund", "label": "Total Refund", "format": "currency", "width": 120 },
+                    { "key": "current_revenue", "label": "Revenue", "format": "currency", "width": 120 }
+                  ],
+                  "default_sort": { "column": "total_price", "direction": "desc" },
+                  "width": 6
+                },
+                {
+                  "type": "table",
+                  "title": "Totals by Website",
+                  "data_source": "totals_by_website",
+                  "columns": [
+                    { "key": "website_name", "label": "Website", "width": 130 },
+                    { "key": "order_count", "label": "Orders", "format": "number", "width": 80 },
+                    { "key": "total_payment", "label": "Payment", "format": "currency", "width": 100 },
+                    { "key": "total_refund", "label": "Refund", "format": "currency", "width": 100 },
+                    { "key": "current_revenue", "label": "Revenue", "format": "currency", "width": 100 },
+                    { "key": "total_cost", "label": "Cost", "format": "currency", "width": 100 }
+                  ],
+                  "default_sort": { "column": "total_payment", "direction": "desc" },
+                  "aggregations": {
+                    "order_count": "sum",
+                    "total_payment": "sum",
+                    "total_refund": "sum",
+                    "current_revenue": "sum",
+                    "total_cost": "sum"
+                  },
+                  "width": 6
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "final_results",
+      "label": "Final Results",
+      "layout": [
+        {
+          "type": "section",
+          "title": "Final Results",
+          "children": [
+            {
+              "type": "row",
+              "children": [
+                { "type": "big_value", "title": "Orders", "value": "$computed.final_orders", "format": "number", "display": "full", "decimals": 0 },
+                { "type": "big_value", "title": "Revenue", "value": "$computed.final_revenue", "format": "currency", "display": "full", "decimals": 0 },
+                { "type": "big_value", "title": "Cost", "value": "$computed.final_cost", "format": "currency", "display": "full", "decimals": 0 }
+              ]
+            },
+            {
+              "type": "row",
+              "children": [
+                {
+                  "type": "table",
+                  "title": "Cost by Lab Network",
+                  "data_source": "cost_by_lab_network",
+                  "columns": [
+                    { "key": "lab_network_name", "label": "Lab Network", "width": 180 },
+                    { "key": "order_count", "label": "Orders", "format": "number", "width": 100 },
+                    { "key": "revenue", "label": "Revenue", "format": "currency", "width": 120 },
+                    { "key": "total_cost", "label": "Cost", "format": "currency", "width": 120 }
+                  ],
+                  "default_sort": { "column": "total_cost", "direction": "desc" },
+                  "aggregations": { "order_count": "sum", "revenue": "sum", "total_cost": "sum" },
+                  "width": 12
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "by_test_results_date",
+      "label": "By Test Results Date",
+      "layout": [
+        {
+          "type": "section",
+          "title": "By Test Results Date",
+          "children": [
+            {
+              "type": "row",
+              "children": [
+                {
+                  "type": "table",
+                  "title": "Cost by Lab Network (Result Date Filtered)",
+                  "data_source": "by_result_date",
+                  "columns": [
+                    { "key": "lab_network_name", "label": "Lab Network", "width": 180 },
+                    { "key": "order_count", "label": "Orders", "format": "number", "width": 100 },
+                    { "key": "revenue", "label": "Revenue", "format": "currency", "width": 120 },
+                    { "key": "total_cost", "label": "Cost", "format": "currency", "width": 120 }
+                  ],
+                  "default_sort": { "column": "total_cost", "direction": "desc" },
+                  "aggregations": { "order_count": "sum", "revenue": "sum", "total_cost": "sum" },
+                  "width": 12
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "payment_timing",
+      "label": "Payment Timing",
+      "layout": [
+        {
+          "type": "section",
+          "title": "Payment Timing",
+          "children": [
+            {
+              "type": "row",
+              "children": [
+                { "type": "big_value", "title": "Pre Transferred Payments", "value": "$computed_source.payments_waterfall._metrics.total_pre", "format": "currency", "display": "full", "decimals": 0 },
+                { "type": "big_value", "title": "Order Month Payments", "value": "$computed_source.payments_waterfall._metrics.total_month_0", "format": "currency", "display": "full", "decimals": 0 },
+                { "type": "big_value", "title": "After Order Month Payments", "value": "$computed_source.payments_waterfall._metrics.total_subsequent", "format": "currency", "display": "full", "decimals": 0 }
+              ]
+            },
+            {
+              "type": "row",
+              "children": [
+                {
+                  "type": "table",
+                  "title": "Order Month by Brand",
+                  "data_source": "order_month_by_brand",
+                  "columns": [
+                    { "key": "website", "label": "Website", "width": 140 },
+                    { "key": "pre_payments", "label": "Pre Payments", "format": "currency", "width": 120 },
+                    { "key": "month_0_payments", "label": "Month 0", "format": "currency", "width": 120 },
+                    { "key": "order_month_total", "label": "Order Month Total", "format": "currency", "width": 140 }
+                  ],
+                  "width": 6
+                },
+                {
+                  "type": "table",
+                  "title": "Payment Timing Summary",
+                  "data_source": "payment_timing_summary",
+                  "columns": [
+                    { "key": "website", "label": "Website", "width": 140 },
+                    { "key": "order_month_payments", "label": "Order Month", "format": "currency", "width": 120 },
+                    { "key": "subsequent_payments", "label": "Subsequent", "format": "currency", "width": 120 },
+                    { "key": "total_payments", "label": "Total", "format": "currency", "width": 120 }
+                  ],
+                  "width": 6
+                }
+              ]
+            },
+            {
+              "type": "row",
+              "children": [
+                {
+                  "type": "table",
+                  "title": "Payments Waterfall",
+                  "data_source": "payments_waterfall",
+                  "columns": "auto",
+                  "column_format": { "pre": "currency", "0": "currency", "1": "currency", "2": "currency", "3": "currency", "4": "currency", "5": "currency", "6": "currency", "7": "currency", "8": "currency", "9": "currency", "10": "currency", "11": "currency", "12": "currency", "13": "currency", "14": "currency", "15": "currency", "16": "currency", "17": "currency", "18": "currency", "19": "currency", "20": "currency", "21": "currency", "22": "currency", "23": "currency", "24": "currency" },
+                  "width": 12
+                }
+              ]
+            },
+            {
+              "type": "row",
+              "children": [
+                {
+                  "type": "table",
+                  "title": "Refunds Waterfall",
+                  "data_source": "refunds_waterfall",
+                  "columns": "auto",
+                  "width": 12
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+
+  "layout": []
+}

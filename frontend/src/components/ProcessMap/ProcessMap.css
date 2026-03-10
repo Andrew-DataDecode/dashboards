@@ -1,0 +1,93 @@
+/* ReactFlow internal element styling for ProcessMap */
+
+/* Edge styling - visible, darker strokes */
+.process-map .react-flow__edge-path {
+  stroke: #6b7280;
+  stroke-width: 2;
+}
+
+.process-map .react-flow__edge.selected .react-flow__edge-path {
+  stroke: #3b82f6;
+  stroke-width: 2.5;
+}
+
+.process-map .react-flow__edge-text {
+  font-size: 11px;
+  fill: #6b7280;
+}
+
+/* Controls - styled card with shadow */
+.process-map .react-flow__controls {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.process-map .react-flow__controls-button {
+  background: #ffffff;
+  border: none;
+  border-bottom: 1px solid #e5e7eb;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.process-map .react-flow__controls-button:hover {
+  background-color: #f9fafb;
+}
+
+.process-map .react-flow__controls-button:last-child {
+  border-bottom: none;
+}
+
+.process-map .react-flow__controls-button svg {
+  width: 14px;
+  height: 14px;
+  fill: #1f2937;
+}
+
+/* MiniMap - blue accent mask, card styling */
+.process-map .react-flow__minimap {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.process-map .react-flow__minimap-mask {
+  fill: #3b82f6;
+  fill-opacity: 0.15;
+  stroke: #3b82f6;
+  stroke-width: 2;
+}
+
+.process-map .react-flow__minimap-node {
+  fill: #6b7280;
+  stroke: none;
+}
+
+/* Background dot pattern */
+.process-map .react-flow__background path {
+  stroke: #e5e7eb;
+}
+
+/* Node selection glow rings */
+.process-map .react-flow__node.selected .step-node--action .step-node__content,
+.process-map .react-flow__node.selected [data-step-type="action"] {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+.process-map .react-flow__node.selected .step-node--decision .step-node__diamond-outer,
+.process-map .react-flow__node.selected [data-step-type="decision"] {
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.3);
+}
+
+.process-map .react-flow__node.selected .step-node--start .step-node__content,
+.process-map .react-flow__node.selected .step-node--end .step-node__content,
+.process-map .react-flow__node.selected [data-step-type="start"],
+.process-map .react-flow__node.selected [data-step-type="end"] {
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3);
+}

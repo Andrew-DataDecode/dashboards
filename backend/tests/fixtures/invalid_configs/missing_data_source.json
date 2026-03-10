@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "title": "Bad Dashboard",
+  "description": "Panel references nonexistent data source",
+  "data_sources": {
+    "consultations": {
+      "source": "duckdb",
+      "sql_ref": "detail.sql",
+      "table_name": "consultations",
+      "filters": [],
+      "cache_ttl_seconds": 300
+    }
+  },
+  "filters": {},
+  "computed": {},
+  "layout": [
+    {
+      "type": "section",
+      "children": [
+        {
+          "type": "table",
+          "data_source": "nonexistent_source",
+          "columns": [{ "key": "id", "label": "ID" }]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "title": "Bad SQL Ref",
+  "description": "sql_ref with path traversal",
+  "data_sources": {
+    "main": {
+      "source": "duckdb",
+      "sql_ref": "../../../etc/passwd",
+      "table_name": "main_table",
+      "filters": [],
+      "cache_ttl_seconds": 300
+    }
+  },
+  "filters": {},
+  "computed": {},
+  "layout": []
+}

@@ -1,0 +1,40 @@
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  --chakra-colors-bg\.page: var(--chakra-colors-bg-page, #f9fafb);
+  --chakra-colors-bg\.card: var(--chakra-colors-bg-card, #ffffff);
+  --chakra-colors-bg\.sidebar: var(--chakra-colors-bg-sidebar, #f2f4f7);
+  --chakra-colors-border\.default: var(--chakra-colors-border-default, #eaecf0);
+  --chakra-colors-border\.subtle: var(--chakra-colors-border-subtle, rgba(0,0,0,0.06));
+  --chakra-colors-text\.primary: var(--chakra-colors-text-primary, #101828);
+  --chakra-colors-text\.secondary: var(--chakra-colors-text-secondary, #475467);
+  --chakra-colors-accent\.500: var(--chakra-colors-accent-500, #7f56d9);
+  --chakra-colors-accent\.600: var(--chakra-colors-accent-600, #2f1868);
+  --chakra-colors-status\.green: var(--chakra-colors-status-green, #059669);
+  --chakra-colors-status\.yellow: var(--chakra-colors-status-yellow, #fec84b);
+  --chakra-colors-status\.red: var(--chakra-colors-status-red, #dc2626);
+  --chakra-colors-table\.stripe: var(--chakra-colors-table-stripe, #f9fafb);
+  --chakra-colors-table\.hover: var(--chakra-colors-table-hover, #f2f4f7);
+  --chakra-shadows-shadow\.card: var(--chakra-shadows-card, 0 1px 2px rgba(0,0,0,0.04), 0 2px 8px rgba(16,24,40,0.06));
+  --chakra-shadows-shadow\.cardHover: var(--chakra-shadows-cardHover, 0 2px 4px rgba(0,0,0,0.06), 0 8px 24px rgba(16,24,40,0.1));
+  --chakra-shadows-shadow\.nav: var(--chakra-shadows-nav, 0 1px 3px rgba(0,0,0,0.06));
+}
+
+body {
+  margin: 0;
+  background-color: var(--chakra-colors-bg-page, #f9fafb);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

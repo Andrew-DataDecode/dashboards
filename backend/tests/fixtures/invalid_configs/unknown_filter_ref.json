@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "title": "Unknown Filter",
+  "description": "Data source references nonexistent filter",
+  "data_sources": {
+    "main": {
+      "source": "duckdb",
+      "sql_ref": "detail.sql",
+      "table_name": "main_table",
+      "filters": ["@nonexistent_filter:some_column"],
+      "cache_ttl_seconds": 300
+    }
+  },
+  "filters": {
+    "real_filter": {
+      "type": "text",
+      "label": "Real",
+      "match": "exact"
+    }
+  },
+  "computed": {},
+  "layout": []
+}
